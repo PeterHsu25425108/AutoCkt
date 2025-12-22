@@ -15,7 +15,7 @@ debug = False
 
 class NgSpiceWrapper(object):
 
-    BASE_TMP_DIR = os.path.abspath("/tmp/ckt_da")
+    BASE_TMP_DIR = os.path.expanduser("~/AutoCkt/ckt_da")
 
     def __init__(self, num_process, yaml_path, path, root_dir=None):
         if root_dir == None:

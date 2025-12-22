@@ -17,7 +17,8 @@ from ray.rllib.agents.registry import get_agent_class
 from ray.tune.registry import register_env
 
 #from bag_deep_ckt.autockt.envs.bag_opamp_discrete import TwoStageAmp
-from envs.spectre_vanilla_opamp import TwoStageAmp
+#from envs.spectre_vanilla_opamp import TwoStageAmp
+from envs.ngspice_vanilla_opamp import TwoStageAmp
 
 EXAMPLE_USAGE = """
 Example Usage via RLlib CLI:
@@ -103,13 +104,27 @@ def run(args, parser):
             parser.error("the following arguments are required: --env")
         args.env = config.get("env")
 
-    ray.init()
+    tmp = os.environ.get("RAY_TMPDIR")
+    #ray.init()
+    ray.shutdown()
+    ray.init(temp_dir=tmp)
+    
+    register_env("opamp-v0", lambda cfg: TwoStageAmp(env_config=cfg))
+    config["env"] = "opamp-v0"
+    
+    config["env_config"] = {
+        "generalize": True,
+        "num_valid": args.num_val_specs,
+        "save_specs": False,
+        "run_valid": True,
+    }
 
     cls = get_agent_class(args.run)
     agent = cls(env=args.env, config=config)
     agent.restore(args.checkpoint)
     num_steps = int(args.steps)
     rollout(agent, args.env, num_steps, args.out, args.no_render)
+    ray.shutdown()
 
 def unlookup(norm_spec, goal_spec):
     spec = -1*np.multiply((norm_spec+1), goal_spec)/(norm_spec-1) 
