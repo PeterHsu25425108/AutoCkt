@@ -1,0 +1,6 @@
+{
+	"gain_min": 300,
+	"ibias_max": 0.006,
+	"phm_min": 60.0,
+	"ugbw_min": 20000000.0
+}
