@@ -59,6 +59,7 @@ fi
 # Initialize conda
 echo "Initializing conda environment..."
 source ~/anaconda3/etc/profile.d/conda.sh || source ~/miniconda3/etc/profile.d/conda.sh || eval "$(conda shell.bash hook)"
+source ~/.bashrc
 
 # Activate autockt environment
 echo "Activating autockt environment..."
