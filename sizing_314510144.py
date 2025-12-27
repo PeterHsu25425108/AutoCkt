@@ -57,11 +57,17 @@ def load_specifications(spec_file):
     with open(spec_file, 'r') as f:
         specs = json.load(f)
     
+    # print specs for verification
+    print("Loaded Specifications:")
+    for key, value in specs.items():
+        print("{}: {}".format(key, value))
+    
     # Validate required specifications
     required_specs = ['gain_min', 'ibias_max', 'phm_min', 'ugbw_min']
     for spec in required_specs:
         if spec not in specs:
-            raise ValueError(f"Missing required specification: {spec}")
+            raise ValueError("Missing required specification: {}".format(spec))
+    
     
     return specs
 
@@ -116,10 +122,8 @@ def run_agent(agent, env, max_steps):
     best_params = None
     best_specs = None
     
-    print(f"Target specs: gain_min={env.specs_ideal[0]:.2f}, "
-          f"ibias_max={env.specs_ideal[1]:.6f}, "
-          f"phm_min={env.specs_ideal[2]:.2f}, "
-          f"ugbw_min={env.specs_ideal[3]:.2e}")
+    print("Target specs: gain_min={:.2f}, ibias_max={:.6f}, phm_min={:.2f}, ugbw_min={:.2e}".format(
+          env.specs_ideal[0], env.specs_ideal[1], env.specs_ideal[2], env.specs_ideal[3]))
     print("-" * 60)
     
     while not done and steps < max_steps:
@@ -136,11 +140,8 @@ def run_agent(agent, env, max_steps):
             best_specs = env.cur_specs.copy()
         
         if steps % 5 == 0:
-            print(f"Step {steps}: reward={reward:.4f}, "
-                  f"gain={env.cur_specs[0]:.2f}, "
-                  f"ibias={env.cur_specs[1]:.6f}, "
-                  f"phm={env.cur_specs[2]:.2f}, "
-                  f"ugbw={env.cur_specs[3]:.2e}")
+            print("Step {}: reward={:.4f}, gain={:.2f}, ibias={:.6f}, phm={:.2f}, ugbw={:.2e}".format(
+                  steps, reward, env.cur_specs[0], env.cur_specs[1], env.cur_specs[2], env.cur_specs[3]))
         
         steps += 1
         state = next_state
@@ -153,8 +154,8 @@ def run_agent(agent, env, max_steps):
     
     if not done:
         print("\n" + "=" * 60)
-        print(f"Maximum steps ({max_steps}) reached. Using best design found.")
-        print(f"Best reward: {best_reward:.4f}")
+        print("Maximum steps ({}) reached. Using best design found.".format(max_steps))
+        print("Best reward: {:.4f}".format(best_reward))
         print("=" * 60)
         # Use best params found if goal not reached
         if best_params is not None:
@@ -181,7 +182,7 @@ def generate_netlist(param_values, output_file="final_design.cir"):
     template_path = os.path.join(os.getcwd(), "final_design_template_v2.cir")
     
     if not os.path.exists(template_path):
-        raise FileNotFoundError(f"Template file not found: {template_path}")
+        raise FileNotFoundError("Template file not found: {}".format(template_path))
     
     with open(template_path, 'r') as f:
         template = f.read()
@@ -202,13 +203,13 @@ def generate_netlist(param_values, output_file="final_design.cir"):
     # cc needs to be converted from Farads to picoFarads
     cc_pf = cc * 1e12
     
-    param_lines = f""".param wp1=0.5u lp1=90n mp1={mp1}
-.param wn1=0.5u ln1=90n mn1={mn1}
-.param wn3=0.5u ln3=90n mn3={mn3}
-.param wp3=0.5u lp3=90n mp3={mp3}
-.param wn4=0.5u ln4=90n mn4={mn4}
-.param wn5=0.5u ln5=90n mn5={mn5}
-.param cc={cc_pf}p"""
+    param_lines = """.param wp1=0.5u lp1=90n mp1={}
+.param wn1=0.5u ln1=90n mn1={}
+.param wn3=0.5u ln3=90n mn3={}
+.param wp3=0.5u lp3=90n mp3={}
+.param wn4=0.5u ln4=90n mn4={}
+.param wn5=0.5u ln5=90n mn5={}
+.param cc={}p""".format(mp1, mn1, mn3, mp3, mn4, mn5, cc_pf)
     
     # Replace the TODO section in template
     # Find the TODO section and replace it
@@ -230,12 +231,12 @@ def generate_netlist(param_values, output_file="final_design.cir"):
     with open(output_file, 'w') as f:
         f.write(netlist)
     
-    print(f"\nFinal netlist written to: {output_file}")
+    print("\nFinal netlist written to: {}".format(output_file))
     print("\nTuned Parameters:")
-    print(f"  mp1={mp1}, mn1={mn1}")
-    print(f"  mp3={mp3}, mn3={mn3}")
-    print(f"  mn4={mn4}, mn5={mn5}")
-    print(f"  cc={cc_pf:.3f}p ({cc:.2e}F)")
+    print("  mp1={}, mn1={}".format(mp1, mn1))
+    print("  mp3={}, mn3={}".format(mp3, mn3))
+    print("  mn4={}, mn5={}".format(mn4, mn5))
+    print("  cc={:.3f}p ({:.2e}F)".format(cc_pf, cc))
 
 
 def main():
@@ -245,15 +246,15 @@ def main():
     print("=" * 60)
     print("AutoCkt Sizing Tool")
     print("=" * 60)
-    print(f"Model checkpoint: {args.model}")
-    print(f"Specification file: {args.spec}")
-    print(f"Max trajectory length: {args.traj_len}")
+    print("Model checkpoint: {}".format(args.model))
+    print("Specification file: {}".format(args.spec))
+    print("Max trajectory length: {}".format(args.traj_len))
     print("=" * 60 + "\n")
     
     # Load target specifications
     print("Loading target specifications...")
     target_specs = load_specifications(args.spec)
-    print(f"Target specs loaded: {target_specs}\n")
+    print("Target specs loaded: {}\n".format(target_specs))
     
     # Create custom environment configuration
     env_config = create_custom_env_config(target_specs)
@@ -267,31 +268,25 @@ def main():
     # Register environment
     register_env("opamp-v0", lambda cfg: TwoStageAmp(env_config=cfg))
     
-    # Load agent configuration from checkpoint
-    print(f"Loading agent from checkpoint: {args.model}...")
-    config_dir = os.path.dirname(args.model)
-    config_path = os.path.join(config_dir, "params.json")
-    if not os.path.exists(config_path):
-        config_path = os.path.join(config_dir, "../params.json")
-    
-    if not os.path.exists(config_path):
-        raise ValueError("Could not find params.json in checkpoint directory")
-    
-    with open(config_path) as f:
-        config = json.load(f)
-    
-    # Update config for single evaluation
-    if "num_workers" in config:
-        config["num_workers"] = 0
-    
-    config["env"] = "opamp-v0"
-    config["env_config"] = env_config
+    # Hard-coded agent configuration (from trained model)
+    print("Loading agent from checkpoint: {}...".format(args.model))
+    config = {
+        "env": "opamp-v0",
+        "env_config": env_config,
+        "horizon": 30,
+        "model": {
+            "fcnet_hiddens": [64, 64]
+        },
+        "num_gpus": 0,
+        "num_workers": 0,
+        "train_batch_size": 1200
+    }
     
     # Create and restore agent
     print("Creating PPO agent...")
     cls = get_agent_class("PPO")
     agent = cls(env="opamp-v0", config=config)
-    agent.restore(args.model)
+    agent._restore(args.model)
     print("Agent restored successfully!\n")
     
     # Create environment for running
@@ -307,10 +302,10 @@ def main():
     
     # Display final results
     print("\nFinal Performance:")
-    print(f"  Gain: {final_specs[0]:.2f} (target: >={target_specs['gain_min']})")
-    print(f"  Ibias: {final_specs[1]:.6f} (target: <={target_specs['ibias_max']})")
-    print(f"  Phase Margin: {final_specs[2]:.2f}° (target: >={target_specs['phm_min']})")
-    print(f"  UGBW: {final_specs[3]:.2e} Hz (target: >={target_specs['ugbw_min']})")
+    print("  Gain: {:.2f} (target: >={:.2f})".format(final_specs[0], target_specs['gain_min']))
+    print("  Ibias: {:.6f} (target: <={:.6f})".format(final_specs[1], target_specs['ibias_max']))
+    print("  Phase Margin: {:.2f}° (target: >={:.2f})".format(final_specs[2], target_specs['phm_min']))
+    print("  UGBW: {:.2e} Hz (target: >={:.2e})".format(final_specs[3], target_specs['ugbw_min']))
     
     # Generate final netlist
     print("\nGenerating final netlist...")
