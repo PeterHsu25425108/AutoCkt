@@ -4,7 +4,7 @@ Sizing script for AutoCkt - Automatically tunes transistor parameters
 to meet target specifications using a trained RL agent.
 
 Usage:
-    python sizing_314510144.py --model <checkpoint_path> --spec <spec_json_file>
+    python sizing_314510144.py --model <model_[stu_ID]> --spec <spec_json_file>
 """
 
 from __future__ import absolute_import
@@ -261,7 +261,7 @@ def main():
     
     # Initialize Ray
     print("Initializing Ray...")
-    tmp = os.environ.get("RAY_TMPDIR")
+    tmp = "./ray_tmp"#os.environ.get("RAY_TMPDIR")
     ray.shutdown()
     ray.init(temp_dir=tmp, ignore_reinit_error=True)
     
